@@ -1,0 +1,2274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Raíz Viva - Supervivencia de Árboles en Vivo</title>
+  <meta name="description" content="Para que los árboles no solo se planten, sino que sobrevivan. Demo interactiva con clasificación en tiempo real para 50 participantes.">
+  <meta name="theme-color" content="#2E7D32">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Raíz Viva">
+
+  <!-- Fuentes e Iconos desde CDN confiable -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <style>
+    /* ========================================================= */
+    /* ESTILOS COMPLETOS RAÍZ VIVA (TODO EN UN SOLO ARCHIVO)     */
+    /* ========================================================= */
+    :root {
+      --primary: #2e7d32;
+      --primary-light: #4caf50;
+      --primary-dark: #1b5e20;
+      --primary-bg: #e8f5e9;
+      --accent-blue: #0288d1;
+      --warning: #f57c00;
+      --bg-app: #f5f9f5;
+      --card-bg: #ffffff;
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+      --border-color: #e5e7eb;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 12px rgba(46, 125, 50, 0.08);
+      --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      overflow-x: hidden;
+    }
+
+    #app-container {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      background-color: var(--card-bg);
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.06);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      padding-bottom: 76px;
+    }
+
+    /* Cabecera */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      box-shadow: 0 4px 10px rgba(46, 125, 50, 0.25);
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--primary-dark);
+      line-height: 1.1;
+    }
+
+    .brand-tagline {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .user-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-bg);
+      color: var(--primary-dark);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+      border: 1px solid #bbf7d0;
+    }
+
+    .user-badge:active { transform: scale(0.96); }
+
+    /* Cinta de Actividad en Vivo */
+    .activity-ticker {
+      background: #064e3b;
+      color: white;
+      padding: 7px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    .activity-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #34d399;
+      animation: pulseDot 1s infinite;
+      shrink: 0;
+    }
+
+    /* Pestañas */
+    .tab-content {
+      display: none;
+      padding: 16px;
+      flex: 1;
+      animation: fadeIn 0.25s ease-out forwards;
+    }
+
+    .tab-content.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Tarjetas */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card-hero {
+      background: linear-gradient(145deg, #ffffff, #f0fdf4);
+      border: 1px solid #bbf7d0;
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #dcfce7;
+      color: #15803d;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .badge-live::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #22c55e;
+      animation: pulseDot 1.2s infinite;
+    }
+
+    @keyframes pulseDot {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      50% { transform: scale(1.4); opacity: 1; }
+      100% { transform: scale(0.9); opacity: 0.8; }
+    }
+
+    /* Botones */
+    .btn-primary {
+      width: 100%;
+      padding: 13px 20px;
+      border: none;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(46, 125, 50, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:active { transform: scale(0.98); }
+
+    .btn-secondary {
+      width: 100%;
+      padding: 11px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background: white;
+      color: var(--text-main);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    /* Onboarding */
+    .onboarding-hero {
+      text-align: center;
+      padding: 32px 16px 20px;
+    }
+
+    .hero-tree-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, var(--primary-bg), #c8e6c9);
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      color: var(--primary);
+      box-shadow: 0 8px 20px rgba(46, 125, 50, 0.15);
+    }
+
+    .onboarding-title {
+      font-size: 23px;
+      font-weight: 900;
+      color: var(--primary-dark);
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+
+    .onboarding-slogan {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .feature-pill-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 26px;
+      text-align: left;
+    }
+
+    .feature-pill {
+      background: var(--bg-app);
+      border: 1px solid #e0ebd8;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 700;
+      color: #2e4d28;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Árbol Animado y Canvas */
+    .tree-canvas-card {
+      position: relative;
+      width: 100%;
+      height: 220px;
+      background: linear-gradient(180deg, #e0f2fe 0%, #ecfdf5 60%, #d1fae5 100%);
+      border-radius: var(--radius-md);
+      border: 1px solid #a7f3d0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      margin: 10px 0 16px;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.04);
+    }
+
+    .tree-illustration {
+      transform-origin: bottom center;
+      transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .tree-swaying { animation: treeSway 4s ease-in-out infinite; }
+    .tree-blooming { animation: treePulse 1.2s ease-out; }
+
+    @keyframes treeSway {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(1.4deg); }
+    }
+
+    @keyframes treePulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); filter: drop-shadow(0 0 14px rgba(34, 197, 94, 0.7)); }
+      100% { transform: scale(1); }
+    }
+
+    /* Animación de lluvia al regar */
+    .rain-container {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 20;
+      overflow: hidden;
+      display: none;
+    }
+
+    .rain-container.active { display: block; }
+
+    .raindrop {
+      position: absolute;
+      top: 0;
+      font-size: 18px;
+    }
+
+    .raindrop-1 { left: 25%; animation: fall 0.8s infinite cubic-bezier(0.4, 0, 0.6, 1); }
+    .raindrop-2 { left: 40%; animation: fall 0.9s infinite cubic-bezier(0.4, 0, 0.6, 1) 0.2s; }
+    .raindrop-3 { left: 55%; animation: fall 0.75s infinite cubic-bezier(0.4, 0, 0.6, 1) 0.4s; }
+    .raindrop-4 { left: 70%; animation: fall 0.85s infinite cubic-bezier(0.4, 0, 0.6, 1) 0.15s; }
+
+    @keyframes fall {
+      0% { transform: translateY(-10px) scale(0.6); opacity: 0; }
+      30% { opacity: 0.9; }
+      90% { transform: translateY(110px) scale(1); opacity: 0.9; }
+      100% { transform: translateY(125px) scale(1.4); opacity: 0; }
+    }
+
+    /* Línea Láser en Foto IA */
+    .scanner-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #10b981, #34d399, transparent);
+      box-shadow: 0 0 12px #10b981;
+      z-index: 25;
+      display: none;
+    }
+
+    .scanner-line.active {
+      display: block;
+      animation: scanSweep 1.8s ease-in-out infinite;
+    }
+
+    @keyframes scanSweep {
+      0% { top: 5%; opacity: 0; }
+      20% { opacity: 0.9; }
+      80% { opacity: 0.9; }
+      100% { top: 92%; opacity: 0; }
+    }
+
+    /* Medalla de puntos flotante */
+    .floating-badge {
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #f59e0b;
+      color: #78350f;
+      font-weight: 900;
+      font-size: 13px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+      border: 1.5px solid #fde68a;
+      z-index: 30;
+      pointer-events: none;
+      display: none;
+    }
+
+    .floating-badge.active {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      animation: floatUp 1.8s ease-out forwards;
+    }
+
+    @keyframes floatUp {
+      0% { transform: translate(-50%, 0) scale(0.8); opacity: 0; }
+      20% { opacity: 1; transform: translate(-50%, -15px) scale(1.1); }
+      80% { opacity: 1; transform: translate(-50%, -45px) scale(1); }
+      100% { transform: translate(-50%, -65px) scale(0.9); opacity: 0; }
+    }
+
+    .soil-ground {
+      width: 100%;
+      height: 28px;
+      background: linear-gradient(0deg, #78350f 0%, #a16207 60%, #16a34a 100%);
+      border-top: 2px solid #22c55e;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      z-index: 10;
+    }
+
+    /* Sensores */
+    .tree-header {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .tree-info h3 {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .tree-qr-pill {
+      font-size: 11px;
+      font-weight: 700;
+      background: #f3f4f6;
+      padding: 2px 8px;
+      border-radius: 6px;
+      display: inline-block;
+      margin-top: 3px;
+      color: #4b5563;
+    }
+
+    .health-meter-box {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border-radius: var(--radius-md);
+      padding: 13px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+
+    .health-score {
+      font-size: 30px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .sensor-row { margin-bottom: 11px; }
+
+    .sensor-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .sensor-bar-bg {
+      width: 100%;
+      height: 7px;
+      background: #f1f5f9;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .sensor-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sensor-warning { background-color: #f59e0b; }
+    .sensor-optimal { background-color: #10b981; }
+
+    .alert-banner {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      border-radius: var(--radius-md);
+      padding: 11px 12px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 14px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .history-photos {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .history-thumb {
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      background: #f8fafc;
+      text-align: center;
+    }
+
+    .history-thumb img {
+      width: 100%;
+      height: 60px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .history-thumb span {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      padding: 3px 0;
+    }
+
+    /* Ranking */
+    .ranking-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .podium-container {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 10px;
+      margin: 16px 0 22px;
+      padding: 0 10px;
+    }
+
+    .podium-item {
+      flex: 1;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .podium-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 16px;
+      margin-bottom: -10px;
+      z-index: 2;
+      border: 3px solid white;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .podium-box {
+      width: 100%;
+      border-radius: 12px 12px 0 0;
+      padding: 16px 6px 10px;
+      color: white;
+      font-weight: 800;
+    }
+
+    .podium-1 { order: 2; }
+    .podium-1 .podium-box { height: 90px; background: linear-gradient(180deg, #f59e0b, #d97706); }
+    .podium-1 .podium-avatar { background: #fef3c7; color: #b45309; }
+
+    .podium-2 { order: 1; }
+    .podium-2 .podium-box { height: 72px; background: linear-gradient(180deg, #94a3b8, #64748b); }
+    .podium-2 .podium-avatar { background: #f1f5f9; color: #475569; }
+
+    .podium-3 { order: 3; }
+    .podium-3 .podium-box { height: 58px; background: linear-gradient(180deg, #d97706, #b45309); }
+    .podium-3 .podium-avatar { background: #ffedd5; color: #c2410c; }
+
+    .ranking-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .ranking-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      transition: all 0.2s ease;
+    }
+
+    .ranking-row.current-user {
+      background: #f0fdf4;
+      border: 2px solid #22c55e;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+      transform: scale(1.01);
+    }
+
+    .rank-position {
+      font-size: 14px;
+      font-weight: 800;
+      width: 28px;
+      color: var(--text-muted);
+    }
+
+    .rank-user-info {
+      flex: 1;
+      margin-left: 6px;
+    }
+
+    .rank-name {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .rank-sub { font-size: 11px; color: var(--text-muted); }
+
+    .rank-points {
+      font-size: 15px;
+      font-weight: 900;
+      color: var(--primary-dark);
+    }
+
+    /* Retos */
+    .challenge-item {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 13px;
+      margin-bottom: 10px;
+    }
+
+    .challenge-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .challenge-title { font-size: 13px; font-weight: 800; }
+    .challenge-reward { font-size: 11px; font-weight: 800; color: var(--primary); background: var(--primary-bg); padding: 3px 8px; border-radius: 12px; }
+
+    /* Recicla */
+    .step-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .step-card {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      text-align: center;
+    }
+
+    .step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      font-size: 12px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 6px;
+    }
+
+    .step-title { font-size: 12px; font-weight: 800; margin-bottom: 3px; }
+    .step-desc { font-size: 10px; color: var(--text-muted); line-height: 1.3; }
+
+    /* Capas */
+    .layer-card {
+      border-left: 4px solid var(--primary);
+      background: white;
+      border-top: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+
+    .layer-badge { font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase; }
+    .layer-heading { font-size: 13px; font-weight: 800; margin: 2px 0 4px; }
+    .layer-text { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+
+    /* Navegación Fija Inferior */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      height: 64px;
+      background: white;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 50;
+      padding: 0 4px;
+    }
+
+    .nav-tab-btn {
+      flex: 1;
+      height: 100%;
+      border: none;
+      background: transparent;
+      color: #9ca3af;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .nav-tab-btn i { font-size: 17px; }
+    .nav-tab-btn.active { color: var(--primary); }
+
+    /* Modales */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal-box {
+      background: white;
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 380px;
+      padding: 22px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .modal-title { font-size: 18px; font-weight: 900; color: var(--text-main); margin-bottom: 6px; }
+    .form-group { margin: 14px 0; }
+    .form-label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; }
+
+    .form-input {
+      width: 100%;
+      padding: 11px 13px;
+      border: 1.5px solid var(--border-color);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 600;
+      outline: none;
+    }
+
+    .form-input:focus { border-color: var(--primary); }
+
+    .toast-container {
+      position: fixed;
+      top: 65px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      width: 90%;
+      max-width: 400px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: #1f2937;
+      color: white;
+      padding: 11px 15px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 700;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Contenedor de Toast -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Contenedor Principal App Móvil -->
+  <div id="app-container">
+
+    <!-- Barra Superior -->
+    <header class="app-header">
+      <div class="brand-wrapper">
+        <div class="brand-logo">
+          <i class="fa-solid fa-seedling"></i>
+        </div>
+        <div>
+          <h1 class="brand-title">Raíz Viva</h1>
+          <span class="brand-tagline">Supervivencia real 🌳</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Píldora de Usuario y Puntos -->
+        <div class="user-badge" id="user-badge-header" data-action="open-register" title="Tu perfil y puntos">
+          <i class="fa-solid fa-leaf" style="color: #10b981;"></i>
+          <span id="user-name-badge">Registrarme</span>
+          <span id="user-points-badge" style="background: #2e7d32; color: white; padding: 1px 7px; border-radius: 10px; font-size: 10px;">0 pts</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Cinta de Actividad en Vivo -->
+    <div id="live-activity-bar" class="activity-ticker">
+      <span class="activity-dot"></span>
+      <span id="live-activity-text" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+        ¡Regístrate para comenzar a cuidar tu árbol y sumar puntos!
+      </span>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 1. PANTALLA: ONBOARDING / BIENVENIDA -->
+    <!-- ========================================== -->
+    <section id="tab-onboarding" class="tab-content active">
+      <div class="onboarding-hero">
+        <div class="hero-tree-icon">
+          <i class="fa-solid fa-tree"></i>
+        </div>
+        <h2 class="onboarding-title">Para que los árboles no solo se planten, sino que sobrevivan</h2>
+        <p class="onboarding-slogan">
+          Conectamos ciudadanos, tecnología IoT y patrocinadores responsables. Cada árbol recibe sensores continuos, verificación por capas y recompensas en vivo.
+        </p>
+
+        <div class="feature-pill-grid">
+          <div class="feature-pill">
+            <i class="fa-solid fa-microchip" style="color:#0288d1;"></i>
+            <span>5 Sensores IoT</span>
+          </div>
+          <div class="feature-pill">
+            <i class="fa-solid fa-camera-retro" style="color:#10b981;"></i>
+            <span>Visión IA Mensual</span>
+          </div>
+          <div class="feature-pill">
+            <i class="fa-solid fa-trophy" style="color:#f59e0b;"></i>
+            <span>Ranking en Vivo</span>
+          </div>
+          <div class="feature-pill">
+            <i class="fa-solid fa-hand-holding-dollar" style="color:#2e7d32;"></i>
+            <span>Pago por Supervivencia</span>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button class="btn-primary" data-action="open-register">
+            <i class="fa-solid fa-user-plus"></i> Registrarme y Recibir Árbol
+          </button>
+          <button class="btn-secondary" data-action="go-sponsor">
+            <i class="fa-solid fa-briefcase"></i> Soy Patrocinador Corporativo
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 2. PANTALLA: MI ÁRBOL (CON ANIMACIÓN) -->
+    <!-- ========================================== -->
+    <section id="tab-tree" class="tab-content">
+      <div class="card card-hero">
+        <div class="tree-header">
+          <div class="tree-info" style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <h3 id="user-tree-title">Luna (Liquidámbar)</h3>
+              <span class="badge-live">En línea</span>
+            </div>
+            <div class="tree-qr-pill">
+              <i class="fa-solid fa-qrcode"></i> Placa <span id="user-tree-qr">RV-4821</span>
+            </div>
+            <div style="font-size: 11px; color: #4b5563; margin-top: 3px;">
+              <i class="fa-solid fa-location-dot" style="color:#10b981;"></i> Parque Poniente • Nivel 3 (<span id="user-tree-height">52 cm</span>)
+            </div>
+          </div>
+        </div>
+
+        <!-- DIBUJO Y ANIMACIÓN INTERACTIVA DEL ÁRBOL -->
+        <div class="tree-canvas-card">
+          <div id="tree-floating-reward" class="floating-badge">
+            <i class="fa-solid fa-sparkles"></i> <span id="tree-floating-text">+15 pts</span>
+          </div>
+
+          <div id="tree-rain-container" class="rain-container">
+            <div class="raindrop raindrop-1">💧</div>
+            <div class="raindrop raindrop-2">💧</div>
+            <div class="raindrop raindrop-3">💧</div>
+            <div class="raindrop raindrop-4">💧</div>
+          </div>
+
+          <div id="tree-scanner-line" class="scanner-line"></div>
+
+          <div style="position: absolute; top: 12px; right: 16px; color: #f59e0b; font-size: 20px;">
+            <i class="fa-solid fa-sun"></i>
+          </div>
+          <div style="position: absolute; top: 16px; left: 16px; color: #94a3b8; font-size: 13px; opacity: 0.7;">
+            ☁️
+          </div>
+
+          <div id="tree-svg-wrapper" class="tree-illustration tree-swaying">
+            <svg width="220" height="175" viewBox="0 0 220 175" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path id="svg-roots-path"
+                d="M106 142 C95 152 75 160 55 165 M114 142 C125 152 145 160 165 165 M110 144 C110 156 112 168 110 174"
+                stroke="#78350f" stroke-width="2.8" stroke-linecap="round" />
+              <path d="M104 145 C102 115 100 88 110 65 C115 88 116 115 116 145 Z" fill="#854d0e" />
+              <path d="M108 92 C90 80 72 75 60 76 M112 85 C128 75 146 72 158 74" stroke="#713f12" stroke-width="4.5" stroke-linecap="round" />
+              <ellipse cx="70" cy="74" rx="28" ry="22" fill="#15803d" opacity="0.9" />
+              <ellipse cx="150" cy="72" rx="28" ry="22" fill="#15803d" opacity="0.9" />
+              <ellipse cx="110" cy="62" rx="36" ry="30" fill="#22c55e" />
+              <ellipse cx="85" cy="50" rx="30" ry="26" fill="#16a34a" />
+              <ellipse cx="135" cy="48" rx="30" ry="26" fill="#4ade80" />
+              <ellipse cx="110" cy="38" rx="28" ry="24" fill="#86efac" />
+              <g id="svg-tree-flowers" style="display: none;">
+                <circle cx="95" cy="32" r="3.5" fill="#f43f5e" />
+                <circle cx="125" cy="35" r="3.5" fill="#fbbf24" />
+                <circle cx="68" cy="62" r="3.5" fill="#fbbf24" />
+                <circle cx="152" cy="60" r="3.5" fill="#f43f5e" />
+                <circle cx="110" cy="22" r="4" fill="#a7f3d0" />
+              </g>
+            </svg>
+          </div>
+
+          <div class="soil-ground">
+            <span id="tree-soil-status">🌱 Suelo: En monitoreo (34%)</span>
+            <span>Sensores IoT 🟢</span>
+          </div>
+        </div>
+
+        <!-- Score de Salud -->
+        <div class="health-meter-box">
+          <div>
+            <div style="font-size: 11px; font-weight: 700; opacity: 0.9;">Índice General de Salud</div>
+            <div class="health-score" id="user-tree-health">87%</div>
+            <div style="font-size: 11px; font-weight: 700; opacity: 0.95;">Excelente vigor vegetativo</div>
+          </div>
+          <div style="font-size: 34px; opacity: 0.9;">
+            <i class="fa-solid fa-heart-pulse"></i>
+          </div>
+        </div>
+
+        <!-- Alerta interactiva -->
+        <div class="alert-banner" id="tree-alert-box">
+          <i class="fa-solid fa-triangle-exclamation" style="font-size: 16px; margin-top: 2px;"></i>
+          <div>
+            <strong>¡Tu árbol necesita agua hoy!</strong>
+            <p style="margin-top: 2px; font-size: 11px;">La humedad bajó a 34%. Presiona "Activar Riego" para nutrirlo y ganar +15 pts.</p>
+          </div>
+        </div>
+
+        <!-- 5 Sensores IoT -->
+        <h4 class="section-title">
+          <i class="fa-solid fa-satellite-dish" style="color:#0288d1;"></i> Telemetría de Sensores (Capa 1)
+        </h4>
+
+        <div class="sensor-row">
+          <div class="sensor-meta">
+            <span><i class="fa-solid fa-droplet" style="color:#0288d1;"></i> Humedad del Suelo</span>
+            <span id="sensor-humidity-val" style="color: #f59e0b; font-weight: 800;">34% (Baja)</span>
+          </div>
+          <div class="sensor-bar-bg">
+            <div id="sensor-humidity-fill" class="sensor-bar-fill sensor-warning" style="width: 34%;"></div>
+          </div>
+        </div>
+
+        <div class="sensor-row">
+          <div class="sensor-meta">
+            <span><i class="fa-solid fa-temperature-half" style="color:#ef4444;"></i> Temperatura Ambiente</span>
+            <span id="sensor-temp-val">23°C (Óptima)</span>
+          </div>
+          <div class="sensor-bar-bg">
+            <div class="sensor-bar-fill sensor-optimal" style="width: 68%;"></div>
+          </div>
+        </div>
+
+        <div class="sensor-row">
+          <div class="sensor-meta">
+            <span><i class="fa-solid fa-sun" style="color:#f59e0b;"></i> Radiación Solar / Luz</span>
+            <span id="sensor-light-val">850 lux (Buena)</span>
+          </div>
+          <div class="sensor-bar-bg">
+            <div class="sensor-bar-fill sensor-optimal" style="width: 78%;"></div>
+          </div>
+        </div>
+
+        <div class="sensor-row">
+          <div class="sensor-meta">
+            <span><i class="fa-solid fa-flask" style="color:#8b5cf6;"></i> pH del Sustrato</span>
+            <span id="sensor-ph-val">6.5 (Equilibrado)</span>
+          </div>
+          <div class="sensor-bar-bg">
+            <div class="sensor-bar-fill sensor-optimal" style="width: 65%;"></div>
+          </div>
+        </div>
+
+        <div class="sensor-row">
+          <div class="sensor-meta">
+            <span><i class="fa-solid fa-bolt" style="color:#64748b;"></i> Sales / Conductividad</span>
+            <span id="sensor-sales-val">1.2 mS/cm (Adecuado)</span>
+          </div>
+          <div class="sensor-bar-bg">
+            <div class="sensor-bar-fill sensor-optimal" style="width: 55%;"></div>
+          </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="action-grid" style="margin-top: 16px;">
+          <button id="btn-water-tree" class="btn-primary" style="background: linear-gradient(135deg, #0288d1, #03a9f4); box-shadow: 0 4px 12px rgba(2, 136, 209, 0.25);">
+            <i class="fa-solid fa-faucet-drip"></i> Activar Riego (+15)
+          </button>
+          <button id="btn-photo-tree" class="btn-primary">
+            <i class="fa-solid fa-camera"></i> Subir Foto IA (+30)
+          </button>
+        </div>
+
+        <!-- Historial fotográfico -->
+        <h4 class="section-title" style="margin-top: 18px;">
+          <i class="fa-solid fa-chart-line" style="color:#10b981;"></i> Historial de Crecimiento (Capa 2 IA)
+        </h4>
+        <div class="history-photos">
+          <div class="history-thumb">
+            <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=200&auto=format&fit=crop&q=60" alt="Mes 1">
+            <span>Mes 1 • 25cm</span>
+          </div>
+          <div class="history-thumb">
+            <img src="https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=200&auto=format&fit=crop&q=60" alt="Mes 2">
+            <span>Mes 2 • 38cm</span>
+          </div>
+          <div class="history-thumb">
+            <img src="https://images.unsplash.com/photo-1448375240586-882707db888b?w=200&auto=format&fit=crop&q=60" alt="Mes 3 Actual">
+            <span id="tree-month3-label">Mes 3 • 52cm ✨</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 3. PANTALLA: RANKING EN VIVO -->
+    <!-- ========================================== -->
+    <section id="tab-ranking" class="tab-content">
+      <div class="ranking-header-bar">
+        <div>
+          <h2 style="font-size: 18px; font-weight: 900; color: #1e293b;">Tabla de Clasificación</h2>
+          <div style="font-size: 11px; color: #64748b; display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+            <span class="badge-live">EN TIEMPO REAL</span>
+            <span id="ranking-count-badge">0 participantes</span>
+          </div>
+        </div>
+        <button id="btn-refresh-ranking" class="btn-secondary" style="width: auto; padding: 6px 12px; font-size: 11px;">
+          <i class="fa-solid fa-arrows-rotate"></i> Actualizar
+        </button>
+      </div>
+
+      <!-- Podio Top 3 -->
+      <div id="podium-container" class="podium-container"></div>
+
+      <!-- Lista de participantes -->
+      <div id="ranking-list" class="ranking-list"></div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 4. PANTALLA: RETOS -->
+    <!-- ========================================== -->
+    <section id="tab-retos" class="tab-content">
+      <div style="margin-bottom: 14px;">
+        <h2 style="font-size: 19px; font-weight: 900; color: #1e293b;">Retos y Misiones</h2>
+        <p style="font-size: 12px; color: #64748b;">Completa metas con tu árbol, suma puntos y escala en la clasificación en vivo.</p>
+      </div>
+
+      <div id="challenges-list"></div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 5. PANTALLA: RECICLA Y GANA -->
+    <!-- ========================================== -->
+    <section id="tab-recicla" class="tab-content">
+      <div style="margin-bottom: 14px;">
+        <h2 style="font-size: 19px; font-weight: 900; color: #1e293b;">Recicla y Gana Puntos</h2>
+        <p style="font-size: 12px; color: #64748b;">Convierte residuos en supervivencia vegetal y recompensas locales.</p>
+      </div>
+
+      <h4 class="section-title"><i class="fa-solid fa-recycle" style="color:#10b981;"></i> Flujo de 4 Pasos</h4>
+      <div class="step-grid">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <div class="step-title">Separa</div>
+          <div class="step-desc">Junta botellas PET, latas y cartón limpio en casa.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <div class="step-title">Escanea</div>
+          <div class="step-desc">Acude a un contenedor inteligente y escanea su código QR.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <div class="step-title">Deposita</div>
+          <div class="step-desc">La báscula IoT pesa tus materiales y asigna puntos.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">4</div>
+          <div class="step-title">Canjea</div>
+          <div class="step-desc">Disfruta descuentos locales o patrocina un árbol extra.</div>
+        </div>
+      </div>
+
+      <h4 class="section-title"><i class="fa-solid fa-gift" style="color:#f59e0b;"></i> Catálogo de Canje</h4>
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid #f1f5f9;">
+          <div>
+            <div style="font-weight:800; font-size:13px;">☕ Café de Especialidad Gratis</div>
+            <div style="font-size:11px; color:#64748b;">En cafeterías aliadas</div>
+          </div>
+          <button class="btn-primary btn-redeem" data-title="Café de Especialidad" data-cost="80" style="width:auto; padding:6px 12px; font-size:11px;">
+            80 pts
+          </button>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid #f1f5f9;">
+          <div>
+            <div style="font-weight:800; font-size:13px;">🌳 Plantar 1 Árbol Extra</div>
+            <div style="font-size:11px; color:#64748b;">Para tu colonia o parque</div>
+          </div>
+          <button class="btn-primary btn-redeem" data-title="Árbol Comunitario" data-cost="200" style="width:auto; padding:6px 12px; font-size:11px; background:linear-gradient(135deg, #10b981, #059669);">
+            200 pts
+          </button>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:800; font-size:13px;">🌱 Kit de Composta Orgánica</div>
+            <div style="font-size:11px; color:#64748b;">Bolsa 5kg de sustrato enriquecido</div>
+          </div>
+          <button class="btn-primary btn-redeem" data-title="Kit de Composta" data-cost="120" style="width:auto; padding:6px 12px; font-size:11px;">
+            120 pts
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 6. PANTALLA: VERIFICACIÓN POR CAPAS -->
+    <!-- ========================================== -->
+    <section id="tab-layers" class="tab-content">
+      <div style="margin-bottom: 14px;">
+        <h2 style="font-size: 19px; font-weight: 900; color: #1e293b;">Verificación por 5 Capas</h2>
+        <p style="font-size: 12px; color: #64748b;">Garantía de supervivencia y transparencia de impacto.</p>
+      </div>
+
+      <div class="card" style="background:#fffbeb; border:1px solid #fef3c7; color:#92400e; padding:12px; margin-bottom:14px; font-size:12px; line-height:1.4;">
+        <i class="fa-solid fa-circle-info" style="font-size:15px; margin-right:4px;"></i>
+        <strong>Principio rector de Raíz Viva:</strong> Los sensores son un sistema de alerta temprana, no una prueba absoluta. La supervivencia real se valida combinando las 5 capas.
+      </div>
+
+      <div class="layer-card">
+        <span class="layer-badge">Capa 1 • Telemetría</span>
+        <h4 class="layer-heading"><i class="fa-solid fa-microchip" style="color:#0288d1;"></i> Sensores IoT en Suelo</h4>
+        <p class="layer-text">Miden humedad, temperatura, luminosidad, pH y sales para advertir estrés hídrico.</p>
+      </div>
+
+      <div class="layer-card">
+        <span class="layer-badge">Capa 2 • Inteligencia Artificial</span>
+        <h4 class="layer-heading"><i class="fa-solid fa-camera" style="color:#10b981;"></i> Comparación Fotométrica Mensual</h4>
+        <p class="layer-text">Modelos de visión comparan biomasa foliar y altura mes a mes.</p>
+      </div>
+
+      <div class="layer-card">
+        <span class="layer-badge">Capa 3 • Identidad Única</span>
+        <h4 class="layer-heading"><i class="fa-solid fa-qrcode" style="color:#8b5cf6;"></i> Placa QR Inalterable + GPS</h4>
+        <p class="layer-text">Identificador físico inviolable geo-referenciado satelitalmente.</p>
+      </div>
+
+      <div class="layer-card">
+        <span class="layer-badge">Capa 4 • Red Humana</span>
+        <h4 class="layer-heading"><i class="fa-solid fa-people-roof" style="color:#f59e0b;"></i> Brigadistas y Comunidad</h4>
+        <p class="layer-text">Guardianes locales verifican la condición presencial de los árboles.</p>
+      </div>
+
+      <div class="layer-card">
+        <span class="layer-badge">Capa 5 • Auditoría Corporativa</span>
+        <h4 class="layer-heading"><i class="fa-solid fa-shield-halved" style="color:#2e7d32;"></i> Auditoría de Patrocinadores</h4>
+        <p class="layer-text">Muestreo aleatorio a los 12 meses antes de liberar el segundo pago.</p>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 7. PANTALLA: PREMIOS -->
+    <!-- ========================================== -->
+    <section id="tab-premios" class="tab-content">
+      <div style="margin-bottom: 14px;">
+        <h2 style="font-size: 19px; font-weight: 900; color: #1e293b;">Premios y Reconocimientos</h2>
+        <p style="font-size: 12px; color: #64748b;">Incentivos para impulsar el compromiso vecinal de largo plazo.</p>
+      </div>
+
+      <div class="card" style="background: linear-gradient(135deg, #fef3c7, #fffbeb); border: 2px solid #f59e0b; text-align: center; padding: 20px 14px;">
+        <div style="font-size: 38px; margin-bottom: 6px;">🏆</div>
+        <span style="background: #f59e0b; color: white; font-size: 10px; font-weight: 900; padding: 3px 10px; border-radius: 12px; text-transform: uppercase;">Gran Premio Anual</span>
+        <h3 style="font-size: 20px; font-weight: 900; color: #78350f; margin-top: 6px;">Fondo Verde de $10,000 MXN</h3>
+        <p style="font-size: 12px; color: #92400e; margin-top: 4px;">
+          Entregado a la colonia con el árbol más longevo, sano y con mayor participación comunitaria.
+        </p>
+      </div>
+
+      <h4 class="section-title"><i class="fa-solid fa-medal" style="color:#f59e0b;"></i> Categorías de Honor</h4>
+
+      <div class="card" style="margin-bottom: 8px;">
+        <div style="display:flex; gap:12px; align-items:center;">
+          <div style="width:36px; height:36px; border-radius:10px; background:#e0f2fe; color:#0288d1; display:flex; align-items:center; justify-content:center; font-size:18px;">
+            <i class="fa-solid fa-map-location-dot"></i>
+          </div>
+          <div>
+            <div style="font-weight:800; font-size:13px;">Mejor Zona Metropolitana</div>
+            <div style="font-size:11px; color:#64748b;">Colonia con más de 95% de supervivencia anual.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom: 8px;">
+        <div style="display:flex; gap:12px; align-items:center;">
+          <div style="width:36px; height:36px; border-radius:10px; background:#dcfce7; color:#16a34a; display:flex; align-items:center; justify-content:center; font-size:18px;">
+            <i class="fa-solid fa-arrow-trend-up"></i>
+          </div>
+          <div>
+            <div style="font-weight:800; font-size:13px;">Mayor Crecimiento Biológico</div>
+            <div style="font-size:11px; color:#64748b;">Árbol con mayor índice de follaje validado por IA.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; gap:12px; align-items:center;">
+          <div style="width:36px; height:36px; border-radius:10px; background:#ffedd5; color:#ea580c; display:flex; align-items:center; justify-content:center; font-size:18px;">
+            <i class="fa-solid fa-fire"></i>
+          </div>
+          <div>
+            <div style="font-weight:800; font-size:13px;">Mejor Racha de Cuidado</div>
+            <div style="font-size:11px; color:#64748b;">Usuario con más meses consecutivos de fotos y riego.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 8. PANTALLA: PANEL PATROCINADOR -->
+    <!-- ========================================== -->
+    <section id="tab-sponsor" class="tab-content">
+      <div style="margin-bottom: 14px;">
+        <h2 style="font-size: 19px; font-weight: 900; color: #1e293b;">Portal de Patrocinadores</h2>
+        <p style="font-size: 12px; color: #64748b;">Transparencia de ESG y retorno de inversión en biodiversidad.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+        <div class="card" style="text-align: center; margin: 0; padding: 12px 10px;">
+          <div style="font-size: 22px; font-weight: 900; color: #2e7d32;">120</div>
+          <div style="font-size: 11px; font-weight: 700; color: #64748b;">Árboles Financiados</div>
+        </div>
+        <div class="card" style="text-align: center; margin: 0; padding: 12px 10px;">
+          <div style="font-size: 22px; font-weight: 900; color: #10b981;">92.5%</div>
+          <div style="font-size: 11px; font-weight: 700; color: #64748b;">Supervivencia Anual</div>
+        </div>
+        <div class="card" style="text-align: center; margin: 0; padding: 12px 10px;">
+          <div style="font-size: 22px; font-weight: 900; color: #0288d1;">2.8 Ton</div>
+          <div style="font-size: 11px; font-weight: 700; color: #64748b;">CO₂ Capturado Est.</div>
+        </div>
+        <div class="card" style="text-align: center; margin: 0; padding: 12px 10px;">
+          <div style="font-size: 22px; font-weight: 900; color: #f59e0b;">$96,000</div>
+          <div style="font-size: 11px; font-weight: 700; color: #64748b;">Inversión Activa</div>
+        </div>
+      </div>
+
+      <div class="card" style="background:#f0fdf4; border:1px solid #bbf7d0;">
+        <h4 style="font-size: 14px; font-weight: 800; color: #166534; margin-bottom: 4px;">
+          <i class="fa-solid fa-handshake"></i> Modelo de Pago Garantizado
+        </h4>
+        <div style="font-size: 12px; color: #14532d; line-height: 1.4;">
+          <strong>$300 MXN</strong> al plantar (cubre árbol + sensor IoT + placa QR)<br>
+          <strong>+ $500 MXN</strong> <span style="text-decoration: underline;">solo si el árbol sigue vivo al año</span>.
+        </div>
+        <div style="margin-top: 8px; font-size: 11px; color: #15803d;">
+          🛡️ Si un árbol muere durante el año, el patrocinador no paga la segunda cuota.
+        </div>
+      </div>
+
+      <h4 class="section-title"><i class="fa-solid fa-file-arrow-down" style="color:#0288d1;"></i> Reportes de Auditoría</h4>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <button class="btn-secondary" onclick="alert('Descargando Reporte Ejecutivo ESG (PDF)...')" style="justify-content:space-between;">
+          <span><i class="fa-solid fa-file-pdf" style="color:#ef4444; margin-right:6px;"></i> Reporte ESG Anual 2026.pdf</span>
+          <span style="font-size:11px; color:#64748b;">2.4 MB</span>
+        </button>
+        <button class="btn-secondary" onclick="alert('Descargando Auditoría de Telemetría (CSV)...')" style="justify-content:space-between;">
+          <span><i class="fa-solid fa-file-csv" style="color:#10b981; margin-right:6px;"></i> Telemetria_Sensores_Raw.csv</span>
+          <span style="font-size:11px; color:#64748b;">840 KB</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- NAVEGACIÓN INFERIOR FIJA -->
+    <nav class="bottom-nav">
+      <button class="nav-tab-btn" data-tab="tree">
+        <i class="fa-solid fa-tree"></i>
+        <span>Mi Árbol</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="ranking">
+        <i class="fa-solid fa-trophy"></i>
+        <span>Ranking</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="retos">
+        <i class="fa-solid fa-list-check"></i>
+        <span>Retos</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="recicla">
+        <i class="fa-solid fa-recycle"></i>
+        <span>Recicla</span>
+      </button>
+      <button class="nav-tab-btn" data-tab="more">
+        <i class="fa-solid fa-ellipsis"></i>
+        <span>Más</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- MODAL: REGISTRO RÁPIDO -->
+  <div id="register-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+        <h3 class="modal-title">🌿 Registro Rápido</h3>
+        <button class="header-btn" data-action="close-modal" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid #e5e7eb; background: white; cursor: pointer;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <p style="font-size: 12px; color: #64748b; margin-bottom: 14px;">
+        Ingresa tu nombre para comenzar. Aparecerás inmediatamente en la tabla de clasificación.
+      </p>
+
+      <form id="register-form">
+        <div class="form-group">
+          <label class="form-label" for="reg-name-input">Nombre Completo *</label>
+          <input type="text" id="reg-name-input" class="form-input" placeholder="Ej. Ana Morales" required autocomplete="name">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-tree-input">Nombre para tu Árbol (Opcional)</label>
+          <input type="text" id="reg-tree-input" class="form-input" placeholder="Ej. Roble Guardián, Luna, Ceiba...">
+        </div>
+
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px; font-size: 11px; color: #166534; margin-bottom: 16px;">
+          <i class="fa-solid fa-gift"></i> <strong>Bono inicial:</strong> Recibirás <strong>50 puntos</strong> y una placa digital QR al instante.
+        </div>
+
+        <button type="submit" class="btn-primary">
+          <i class="fa-solid fa-check"></i> Registrarme y Ver Clasificación
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: SUBMENÚ "MÁS" -->
+  <div id="more-submenu-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+        <h3 class="modal-title">Secciones Adicionales</h3>
+        <button class="header-btn" data-action="close-modal" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid #e5e7eb; background: white; cursor: pointer;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div class="card submenu-item" data-tab="layers" style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 12px;">
+          <div style="width: 34px; height: 34px; border-radius: 8px; background: #e0f2fe; color: #0288d1; display: flex; align-items: center; justify-content: center;">
+            <i class="fa-solid fa-layer-group"></i>
+          </div>
+          <div>
+            <div style="font-weight: 800; font-size: 13px;">Verificación por 5 Capas</div>
+            <div style="font-size: 11px; color: #64748b;">Supervivencia tecnológica y biológica</div>
+          </div>
+        </div>
+
+        <div class="card submenu-item" data-tab="premios" style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 12px;">
+          <div style="width: 34px; height: 34px; border-radius: 8px; background: #fef3c7; color: #f59e0b; display: flex; align-items: center; justify-content: center;">
+            <i class="fa-solid fa-trophy"></i>
+          </div>
+          <div>
+            <div style="font-weight: 800; font-size: 13px;">Premios y Reconocimientos</div>
+            <div style="font-size: 11px; color: #64748b;">Premio anual de $10,000 MXN</div>
+          </div>
+        </div>
+
+        <div class="card submenu-item" data-tab="sponsor" style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 12px;">
+          <div style="width: 34px; height: 34px; border-radius: 8px; background: #dcfce7; color: #16a34a; display: flex; align-items: center; justify-content: center;">
+            <i class="fa-solid fa-briefcase"></i>
+          </div>
+          <div>
+            <div style="font-weight: 800; font-size: 13px;">Panel Patrocinador ESG</div>
+            <div style="font-size: 11px; color: #64748b;">Modelo $300 + $500 por supervivencia</div>
+          </div>
+        </div>
+
+        <div id="btn-download-file" class="card" style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #10b981; background: #ecfdf5;">
+          <div style="width: 34px; height: 34px; border-radius: 8px; background: #059669; color: #ffffff; display: flex; align-items: center; justify-content: center;">
+            <i class="fa-solid fa-download"></i>
+          </div>
+          <div>
+            <div style="font-weight: 800; font-size: 13px; color: #065f46;">Descargar index.html (Para GitHub)</div>
+            <div style="font-size: 11px; color: #047857;">Guarda todo el código en tu computadora o teléfono</div>
+          </div>
+        </div>
+
+        <div id="btn-reset-room" class="card" style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px dashed #fca5a5; background: #fff5f5;">
+          <div style="width: 34px; height: 34px; border-radius: 8px; background: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center;">
+            <i class="fa-solid fa-rotate-left"></i>
+          </div>
+          <div>
+            <div style="font-weight: 800; font-size: 13px; color: #b91c1c;">Reiniciar Sala (Nuevo Grupo)</div>
+            <div style="font-size: 11px; color: #7f1d1d;">Vacía el ranking para iniciar una nueva presentación</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- JAVASCRIPT COMPLETO CON MULTI-DISPOSITIVO EN VIVO         -->
+  <!-- ========================================================= -->
+  <script>
+    (function () {
+      'use strict';
+
+      // ESTADO INICIAL 100% LIMPIO (SIN USUARIOS DE PRUEBA)
+      const STATE = {
+        currentUser: null,
+        participants: [],
+        sensors: {
+          humidity: 34,
+          temp: 23,
+          light: 850,
+          ph: 6.5,
+          sales: 1.2,
+        },
+        challenges: [
+          { id: 'c1', title: 'Guardián de la Sed', desc: 'Riega tu árbol 7 días seguidos', progress: 5, target: 7, points: 25, completed: false },
+          { id: 'c2', title: 'Ojo Botánico', desc: 'Sube 3 fotos mensuales para análisis de IA', progress: 2, target: 3, points: 40, completed: false },
+          { id: 'c3', title: 'Eco-Héroe', desc: 'Lleva 5 botellas PET a punto limpio aliado', progress: 3, target: 5, points: 50, completed: false },
+          { id: 'c4', title: 'Comunidad Verde', desc: 'Invita a 1 amigo a adoptar un árbol', progress: 0, target: 1, points: 35, completed: false },
+        ],
+        activeTab: 'onboarding',
+        isSyncing: false,
+        pollInterval: null,
+      };
+
+      const el = {
+        tabs: document.querySelectorAll('.tab-content'),
+        navBtns: document.querySelectorAll('.nav-tab-btn'),
+        userNameBadge: document.getElementById('user-name-badge'),
+        userPointsBadge: document.getElementById('user-points-badge'),
+        registerModal: document.getElementById('register-modal'),
+        registerForm: document.getElementById('register-form'),
+        nameInput: document.getElementById('reg-name-input'),
+        treeNameInput: document.getElementById('reg-tree-input'),
+        rankingList: document.getElementById('ranking-list'),
+        podiumContainer: document.getElementById('podium-container'),
+        toastContainer: document.getElementById('toast-container'),
+        waterBtn: document.getElementById('btn-water-tree'),
+        photoBtn: document.getElementById('btn-photo-tree'),
+        refreshRankingBtn: document.getElementById('btn-refresh-ranking'),
+        challengesList: document.getElementById('challenges-list'),
+        sensorHumidityFill: document.getElementById('sensor-humidity-fill'),
+        sensorHumidityVal: document.getElementById('sensor-humidity-val'),
+        sensorAlert: document.getElementById('tree-alert-box'),
+        moreSubmenuModal: document.getElementById('more-submenu-modal'),
+        treeSvgWrapper: document.getElementById('tree-svg-wrapper'),
+        treeRainContainer: document.getElementById('tree-rain-container'),
+        treeScannerLine: document.getElementById('tree-scanner-line'),
+        treeFlowers: document.getElementById('svg-tree-flowers'),
+        treeFloatingReward: document.getElementById('tree-floating-reward'),
+        treeFloatingText: document.getElementById('tree-floating-text'),
+        treeSoilStatus: document.getElementById('tree-soil-status'),
+        treeHeightLabel: document.getElementById('user-tree-height'),
+        treeMonth3Label: document.getElementById('tree-month3-label'),
+        liveActivityText: document.getElementById('live-activity-text'),
+      };
+
+      // Canal público global para sincronizar 50 teléfonos en vivo sin necesidad de servidor
+      const CLOUD_ROOM_TOPIC = 'rv_raizviva_torneo_live_2026';
+      const CLOUD_NTFY_URL = 'https://ntfy.sh/' + CLOUD_ROOM_TOPIC;
+      let hasServerBackend = false;
+      let sseEventSource = null;
+      let broadcastChannel = null;
+
+      try {
+        if ('BroadcastChannel' in window) {
+          broadcastChannel = new BroadcastChannel('rv_live_channel');
+          broadcastChannel.onmessage = (event) => {
+            if (event.data && event.data.type === 'SYNC_PARTICIPANT') {
+              handleIncomingParticipant(event.data.participant, false);
+            }
+          };
+        }
+      } catch (e) {}
+
+      function init() {
+        loadLocalUser();
+        loadLocalChallenges();
+        initCloudSyncStream();
+        fetchLeaderboard(true);
+        setupEvents();
+        renderSensors();
+        renderChallenges();
+        startLivePolling();
+      }
+
+      function loadLocalUser() {
+        try {
+          const savedUser = localStorage.getItem('rv_current_user');
+          if (savedUser) {
+            STATE.currentUser = JSON.parse(savedUser);
+            updateUserUI();
+            switchTab('tree');
+          } else {
+            switchTab('onboarding');
+          }
+        } catch (e) {}
+      }
+
+      function saveLocalUser() {
+        if (STATE.currentUser) {
+          localStorage.setItem('rv_current_user', JSON.stringify(STATE.currentUser));
+          updateUserUI();
+        }
+      }
+
+      function loadLocalChallenges() {
+        try {
+          const saved = localStorage.getItem('rv_challenges');
+          if (saved) STATE.challenges = JSON.parse(saved);
+        } catch (e) {}
+      }
+
+      function saveLocalChallenges() {
+        localStorage.setItem('rv_challenges', JSON.stringify(STATE.challenges));
+      }
+
+      function handleIncomingParticipant(incoming, notify = true) {
+        if (!incoming || !incoming.id || !incoming.name) return false;
+        const idx = STATE.participants.findIndex(
+          (p) => p.id === incoming.id || p.name.trim().toLowerCase() === incoming.name.trim().toLowerCase()
+        );
+        let isNew = false;
+        if (idx >= 0) {
+          STATE.participants[idx] = { ...STATE.participants[idx], ...incoming };
+        } else {
+          STATE.participants.push(incoming);
+          isNew = true;
+          if (notify && (!STATE.currentUser || incoming.id !== STATE.currentUser.id)) {
+            showToast(`🌱 ¡${incoming.name} se unió con ${incoming.treeName || 'su árbol'}!`);
+            if (el.liveActivityText) {
+              el.liveActivityText.textContent = `🌱 ¡${incoming.name} se unió a la sala! (+${incoming.points || 50} pts)`;
+            }
+          }
+        }
+        localStorage.setItem('rv_cached_participants', JSON.stringify(STATE.participants));
+        renderRanking();
+        return isNew;
+      }
+
+      // Conexión en tiempo real para que múltiples teléfonos se sincronicen en vivo en GitHub Pages
+      function initCloudSyncStream() {
+        if (sseEventSource) return;
+        try {
+          sseEventSource = new EventSource(`${CLOUD_NTFY_URL}/sse`);
+          sseEventSource.onmessage = (e) => {
+            try {
+              const msg = JSON.parse(e.data);
+              const payload = typeof msg.message === 'string' ? JSON.parse(msg.message) : msg.message;
+              if (payload && payload.type === 'SYNC_PARTICIPANT' && payload.participant) {
+                handleIncomingParticipant(payload.participant, true);
+              } else if (payload && payload.type === 'RESET_LEADERBOARD') {
+                STATE.participants = [];
+                localStorage.removeItem('rv_cached_participants');
+                renderRanking();
+                showToast('📢 La sala fue reiniciada por el anfitrión');
+              }
+            } catch (err) {}
+          };
+        } catch (e) {}
+
+        // Descarga inicial de participantes ya registrados en la sala
+        fetch(`${CLOUD_NTFY_URL}/json?poll=1`, { cache: 'no-store' })
+          .then((res) => res.text())
+          .then((text) => {
+            if (!text) return;
+            const lines = text.trim().split('\n');
+            lines.forEach((line) => {
+              try {
+                const msg = JSON.parse(line);
+                const payload = typeof msg.message === 'string' ? JSON.parse(msg.message) : msg.message;
+                if (payload && payload.type === 'SYNC_PARTICIPANT' && payload.participant) {
+                  handleIncomingParticipant(payload.participant, false);
+                } else if (payload && payload.type === 'RESET_LEADERBOARD') {
+                  STATE.participants = [];
+                }
+              } catch (err) {}
+            });
+            renderRanking();
+          })
+          .catch(() => {});
+      }
+
+      // Sincronización multi-dispositivo en tiempo real
+      async function fetchLeaderboard(silent = false) {
+        if (STATE.isSyncing) return;
+        STATE.isSyncing = true;
+
+        try {
+          const res = await fetch('/api/leaderboard', { cache: 'no-store' });
+          if (res.ok) {
+            hasServerBackend = true;
+            const data = await res.json();
+            if (data.participants && Array.isArray(data.participants)) {
+              STATE.participants = data.participants;
+              localStorage.setItem('rv_cached_participants', JSON.stringify(data.participants));
+              if (data.activities && data.activities[0] && el.liveActivityText) {
+                el.liveActivityText.textContent = data.activities[0].text;
+              }
+              renderRanking();
+              STATE.isSyncing = false;
+              if (!silent) showToast('Clasificación en vivo actualizada');
+              return;
+            }
+          }
+        } catch (err) {
+          hasServerBackend = false;
+        }
+
+        initCloudSyncStream();
+
+        try {
+          const localPool = localStorage.getItem('rv_cached_participants');
+          if (localPool && STATE.participants.length === 0) {
+            STATE.participants = JSON.parse(localPool);
+          }
+        } catch (e) {}
+
+        if (STATE.currentUser) {
+          handleIncomingParticipant(STATE.currentUser, false);
+        }
+
+        renderRanking();
+        STATE.isSyncing = false;
+      }
+
+      async function syncUserToLeaderboard(user, activityText) {
+        handleIncomingParticipant(user, false);
+
+        // 1. Si hay servidor Express o Vercel disponible
+        if (hasServerBackend) {
+          try {
+            await fetch('/api/leaderboard', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ...user, activityText }),
+            });
+          } catch (err) {}
+        }
+
+        // 2. Transmisión a la nube para sincronizar todos los teléfonos en GitHub Pages
+        try {
+          await fetch(CLOUD_NTFY_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+              type: 'SYNC_PARTICIPANT',
+              participant: user,
+              activityText: activityText || `🌱 ${user.name} compitiendo con ${user.treeName}`,
+              timestamp: Date.now(),
+            }),
+          });
+        } catch (e) {}
+
+        // 3. Broadcast local
+        try {
+          if (broadcastChannel) {
+            broadcastChannel.postMessage({ type: 'SYNC_PARTICIPANT', participant: user });
+          }
+        } catch (e) {}
+
+        fetchLeaderboard(true);
+      }
+
+      // Consulta automática cada 3 segundos como refuerzo
+      function startLivePolling() {
+        if (STATE.pollInterval) clearInterval(STATE.pollInterval);
+        STATE.pollInterval = setInterval(() => {
+          fetchLeaderboard(true);
+        }, 3000);
+      }
+
+      function updateUserUI() {
+        if (!STATE.currentUser) {
+          if (el.userNameBadge) el.userNameBadge.textContent = 'Registrarme';
+          if (el.userPointsBadge) el.userPointsBadge.textContent = '0 pts';
+          return;
+        }
+        if (el.userNameBadge) el.userNameBadge.textContent = STATE.currentUser.name.split(' ')[0];
+        if (el.userPointsBadge) el.userPointsBadge.textContent = `${STATE.currentUser.points} pts`;
+
+        const treeNameEl = document.getElementById('user-tree-title');
+        const treeQrEl = document.getElementById('user-tree-qr');
+        const healthEl = document.getElementById('user-tree-health');
+        if (treeNameEl) treeNameEl.textContent = STATE.currentUser.treeName || 'Árbol Guardián';
+        if (treeQrEl) treeQrEl.textContent = STATE.currentUser.qrCode || 'RV-4821';
+        if (healthEl) healthEl.textContent = `${STATE.currentUser.health || 87}%`;
+      }
+
+      function renderSensors() {
+        const s = STATE.sensors;
+        if (el.sensorHumidityFill) el.sensorHumidityFill.style.width = `${s.humidity}%`;
+        if (el.sensorHumidityVal) el.sensorHumidityVal.textContent = `${s.humidity}%`;
+
+        const tempVal = document.getElementById('sensor-temp-val');
+        const lightVal = document.getElementById('sensor-light-val');
+        const phVal = document.getElementById('sensor-ph-val');
+        const salesVal = document.getElementById('sensor-sales-val');
+
+        if (tempVal) tempVal.textContent = `${s.temp}°C`;
+        if (lightVal) lightVal.textContent = `${s.light} lux`;
+        if (phVal) phVal.textContent = `${s.ph}`;
+        if (salesVal) salesVal.textContent = `${s.sales} mS/cm`;
+      }
+
+      function renderRanking() {
+        if (!el.rankingList) return;
+
+        const sorted = [...STATE.participants].sort((a, b) => b.points - a.points);
+        const countEl = document.getElementById('ranking-count-badge');
+        if (countEl) countEl.textContent = `${sorted.length} participantes`;
+
+        if (el.podiumContainer) {
+          if (sorted.length >= 2) {
+            el.podiumContainer.style.display = 'flex';
+            const p1 = sorted[0];
+            const p2 = sorted[1];
+            const p3 = sorted[2] || { name: '-', points: 0 };
+
+            el.podiumContainer.innerHTML = `
+              <div class="podium-item podium-2">
+                <div class="podium-avatar">🥈</div>
+                <div class="podium-box">
+                  <div style="font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(p2.name.split(' ')[0])}</div>
+                  <div style="font-size:14px; font-weight:900;">${p2.points} pts</div>
+                  <div style="font-size:10px; opacity:0.85;">2° Lugar</div>
+                </div>
+              </div>
+              <div class="podium-item podium-1">
+                <div class="podium-avatar">👑</div>
+                <div class="podium-box">
+                  <div style="font-size:13px; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(p1.name.split(' ')[0])}</div>
+                  <div style="font-size:16px; font-weight:900;">${p1.points} pts</div>
+                  <div style="font-size:11px; font-weight:800; opacity:0.95;">1° Lugar</div>
+                </div>
+              </div>
+              <div class="podium-item podium-3">
+                <div class="podium-avatar">🥉</div>
+                <div class="podium-box">
+                  <div style="font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p3.name !== '-' ? escapeHtml(p3.name.split(' ')[0]) : '-'}</div>
+                  <div style="font-size:14px; font-weight:900;">${p3.points} pts</div>
+                  <div style="font-size:10px; opacity:0.85;">3° Lugar</div>
+                </div>
+              </div>
+            `;
+          } else {
+            el.podiumContainer.style.display = 'none';
+          }
+        }
+
+        if (sorted.length === 0) {
+          el.rankingList.innerHTML = `
+            <div style="text-align: center; padding: 36px 16px; color: #6b7280;">
+              <i class="fa-solid fa-seedling" style="font-size: 38px; color: #10b981; margin-bottom: 12px; display: block;"></i>
+              <h4 style="font-size: 16px; font-weight: 800; color: #1f2937;">Aún no hay participantes</h4>
+              <p style="font-size: 13px; margin-top: 4px;">¡Sé el primero en registrarte y tomar el podio!</p>
+              <button id="empty-reg-btn" class="btn-primary" style="margin-top: 16px; width: auto; padding: 8px 18px; font-size: 13px;">Registrar mi árbol</button>
+            </div>
+          `;
+          document.getElementById('empty-reg-btn')?.addEventListener('click', openRegisterModal);
+          return;
+        }
+
+        let html = '';
+        sorted.forEach((item, index) => {
+          const isCurrent = STATE.currentUser && item.id === STATE.currentUser.id;
+          const rankNum = index + 1;
+          let badgeIcon = `<span class="rank-position">#${rankNum}</span>`;
+          if (rankNum === 1) badgeIcon = `<span class="rank-position" style="color:#d97706; font-size:18px;">🥇</span>`;
+          if (rankNum === 2) badgeIcon = `<span class="rank-position" style="color:#64748b; font-size:18px;">🥈</span>`;
+          if (rankNum === 3) badgeIcon = `<span class="rank-position" style="color:#b45309; font-size:18px;">🥉</span>`;
+
+          html += `
+            <div class="ranking-row ${isCurrent ? 'current-user' : ''}">
+              ${badgeIcon}
+              <div class="rank-user-info">
+                <div class="rank-name">
+                  <span>${escapeHtml(item.name)}</span>
+                  ${isCurrent ? '<span style="background:#22c55e; color:white; font-size:10px; font-weight:800; padding:1px 6px; border-radius:10px;">TÚ</span>' : ''}
+                </div>
+                <div class="rank-sub">${escapeHtml(item.treeName || 'Árbol')} • ${escapeHtml(item.zone || 'Presentación')}</div>
+              </div>
+              <div class="rank-points">${item.points} <span style="font-size:11px; font-weight:700; color:#6b7280;">pts</span></div>
+            </div>
+          `;
+        });
+
+        el.rankingList.innerHTML = html;
+      }
+
+      function renderChallenges() {
+        if (!el.challengesList) return;
+
+        let html = '';
+        STATE.challenges.forEach((c) => {
+          const pct = Math.min(100, Math.round((c.progress / c.target) * 100));
+          html += `
+            <div class="challenge-item">
+              <div class="challenge-top">
+                <div>
+                  <div class="challenge-title">${escapeHtml(c.title)}</div>
+                  <div style="font-size:12px; color:#6b7280; margin-top:2px;">${escapeHtml(c.desc)}</div>
+                </div>
+                <span class="challenge-reward">+${c.points} pts</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700; color:#4b5563; margin-bottom:5px;">
+                <span>Progreso</span>
+                <span>${c.progress}/${c.target} (${pct}%)</span>
+              </div>
+              <div class="sensor-bar-bg" style="height:6px; margin-bottom:10px;">
+                <div class="sensor-bar-fill ${c.completed ? 'sensor-optimal' : 'sensor-blue'}" style="width: ${pct}%;"></div>
+              </div>
+              <button 
+                class="${c.completed ? 'btn-secondary' : 'btn-primary'} btn-challenge-action" 
+                data-id="${c.id}" 
+                style="padding: 7px 12px; font-size: 12px; width: 100%;"
+                ${c.completed ? 'disabled' : ''}
+              >
+                ${c.completed ? '<i class="fa-solid fa-check"></i> Reto completado' : '¡Completar y reclamar puntos!'}
+              </button>
+            </div>
+          `;
+        });
+
+        el.challengesList.innerHTML = html;
+
+        document.querySelectorAll('.btn-challenge-action').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            completeChallenge(id);
+          });
+        });
+      }
+
+      // Animaciones interactivas del árbol
+      function triggerTreeAnimation(type, pointsText) {
+        if (el.treeFloatingReward && pointsText) {
+          if (el.treeFloatingText) el.treeFloatingText.textContent = pointsText;
+          el.treeFloatingReward.classList.remove('active');
+          void el.treeFloatingReward.offsetWidth;
+          el.treeFloatingReward.classList.add('active');
+          setTimeout(() => {
+            el.treeFloatingReward?.classList.remove('active');
+          }, 2000);
+        }
+
+        if (el.treeSvgWrapper) {
+          el.treeSvgWrapper.classList.add('tree-blooming');
+          setTimeout(() => {
+            el.treeSvgWrapper?.classList.remove('tree-blooming');
+          }, 1400);
+        }
+
+        if (type === 'water') {
+          if (el.treeRainContainer) {
+            el.treeRainContainer.classList.add('active');
+            setTimeout(() => {
+              el.treeRainContainer?.classList.remove('active');
+            }, 2500);
+          }
+          if (el.treeFlowers) el.treeFlowers.style.display = 'block';
+          if (el.treeSoilStatus) el.treeSoilStatus.textContent = '🌱 Suelo: Húmedo y nutrido (92%)';
+          const roots = document.getElementById('svg-roots-path');
+          if (roots) roots.setAttribute('stroke', '#0284c7');
+        }
+
+        if (type === 'photo') {
+          if (el.treeScannerLine) {
+            el.treeScannerLine.classList.add('active');
+            setTimeout(() => {
+              el.treeScannerLine?.classList.remove('active');
+            }, 2200);
+          }
+          if (el.treeFlowers) el.treeFlowers.style.display = 'block';
+          if (el.treeHeightLabel) el.treeHeightLabel.textContent = '56 cm (+12%)';
+          if (el.treeMonth3Label) el.treeMonth3Label.textContent = 'Mes 3 • 56cm ✨';
+        }
+      }
+
+      function addPoints(amount, reason) {
+        if (!STATE.currentUser) {
+          showToast('Regístrate primero para acumular puntos');
+          openRegisterModal();
+          return;
+        }
+
+        STATE.currentUser.points += amount;
+        saveLocalUser();
+        syncUserToLeaderboard(STATE.currentUser);
+        triggerTreeAnimation('point', `+${amount} pts`);
+        showToast(`+${amount} pts: ${reason} 🎉`);
+
+        const badge = el.userPointsBadge;
+        if (badge) {
+          badge.style.transform = 'scale(1.2)';
+          badge.style.background = '#86efac';
+          setTimeout(() => {
+            badge.style.transform = 'scale(1)';
+            badge.style.background = 'var(--primary-bg)';
+          }, 300);
+        }
+      }
+
+      function completeChallenge(challengeId) {
+        const ch = STATE.challenges.find((c) => c.id === challengeId);
+        if (!ch || ch.completed) return;
+
+        ch.progress = ch.target;
+        ch.completed = true;
+        saveLocalChallenges();
+        renderChallenges();
+        addPoints(ch.points, `Reto "${ch.title}" superado`);
+      }
+
+      function handleWaterTree() {
+        if (!STATE.currentUser) {
+          openRegisterModal();
+          return;
+        }
+
+        STATE.sensors.humidity = 92;
+        renderSensors();
+        triggerTreeAnimation('water', '+15 pts');
+
+        if (el.sensorAlert) {
+          el.sensorAlert.style.background = '#ecfdf5';
+          el.sensorAlert.style.borderColor = '#a7f3d0';
+          el.sensorAlert.style.color = '#065f46';
+          el.sensorAlert.innerHTML = `
+            <i class="fa-solid fa-circle-check" style="color:#10b981; font-size:18px; margin-top:2px;"></i>
+            <div>
+              <strong>¡Riego activado con éxito!</strong>
+              <p style="margin-top:2px; font-size:12px;">Los sensores confirman hidratación profunda en raíces (92%).</p>
+            </div>
+          `;
+        }
+
+        addPoints(15, 'Riego de emergencia verificado');
+      }
+
+      function handlePhotoTree() {
+        if (!STATE.currentUser) {
+          openRegisterModal();
+          return;
+        }
+
+        triggerTreeAnimation('photo', '+30 pts');
+        showToast('Analizando foto con IA de crecimiento... 🌿');
+
+        setTimeout(() => {
+          showToast('¡IA confirmó +12% de follaje nuevo y tallo vigoroso!');
+          addPoints(30, 'Foto mensual validada por IA');
+        }, 1500);
+      }
+
+      function handleRecycleRedeem(rewardTitle, cost) {
+        if (!STATE.currentUser) {
+          openRegisterModal();
+          return;
+        }
+
+        if (STATE.currentUser.points < cost) {
+          showToast(`Te faltan ${cost - STATE.currentUser.points} pts para este canje`);
+          return;
+        }
+
+        STATE.currentUser.points -= cost;
+        saveLocalUser();
+        syncUserToLeaderboard(STATE.currentUser);
+        showToast(`¡Canje exitoso! Disfruta tu ${rewardTitle}`);
+      }
+
+      function openRegisterModal() {
+        if (el.registerModal) {
+          el.registerModal.classList.add('open');
+          if (el.nameInput) el.nameInput.focus();
+        }
+      }
+
+      function closeRegisterModal() {
+        if (el.registerModal) el.registerModal.classList.remove('open');
+      }
+
+      function handleRegistration(e) {
+        e.preventDefault();
+        const fullName = (el.nameInput?.value || '').trim();
+        const treeNameCustom = (el.treeNameInput?.value || '').trim();
+
+        if (!fullName) {
+          showToast('Por favor introduce tu nombre completo');
+          return;
+        }
+
+        const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+        const newParticipant = {
+          id: 'rv-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 6),
+          name: fullName,
+          treeName: treeNameCustom || 'Árbol ' + fullName.split(' ')[0],
+          points: 50,
+          zone: 'Presentación',
+          qrCode: 'RV-' + randomSuffix,
+          health: 87,
+          joinedAt: new Date().toISOString(),
+        };
+
+        STATE.currentUser = newParticipant;
+        saveLocalUser();
+        syncUserToLeaderboard(newParticipant);
+
+        closeRegisterModal();
+        if (el.registerForm) el.registerForm.reset();
+
+        showToast(`¡Bienvenido/a ${fullName}! Tu árbol está en camino 🌳`);
+        switchTab('tree');
+      }
+
+      function switchTab(tabId) {
+        STATE.activeTab = tabId;
+        el.tabs.forEach((tab) => tab.classList.remove('active'));
+
+        const target = document.getElementById(`tab-${tabId}`);
+        if (target) {
+          target.classList.add('active');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        el.navBtns.forEach((btn) => {
+          if (btn.getAttribute('data-tab') === tabId) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+
+        if (tabId === 'ranking') {
+          fetchLeaderboard(true);
+        }
+      }
+
+      function showToast(message) {
+        if (!el.toastContainer) return;
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = `<i class="fa-solid fa-bell" style="color: #4ade80;"></i><span>${escapeHtml(message)}</span>`;
+        el.toastContainer.appendChild(toast);
+
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          setTimeout(() => toast.remove(), 300);
+        }, 2800);
+      }
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return str
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function setupEvents() {
+        el.navBtns.forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const tab = btn.getAttribute('data-tab');
+            if (tab === 'more') {
+              if (el.moreSubmenuModal) el.moreSubmenuModal.classList.add('open');
+            } else {
+              switchTab(tab);
+            }
+          });
+        });
+
+        document.querySelectorAll('.submenu-item').forEach((item) => {
+          item.addEventListener('click', () => {
+            const targetTab = item.getAttribute('data-tab');
+            if (el.moreSubmenuModal) el.moreSubmenuModal.classList.remove('open');
+            switchTab(targetTab);
+          });
+        });
+
+        document.querySelectorAll('[data-action="open-register"]').forEach((btn) => {
+          btn.addEventListener('click', openRegisterModal);
+        });
+
+        document.querySelectorAll('[data-action="close-modal"]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.modal-overlay').forEach((m) => m.classList.remove('open'));
+          });
+        });
+
+        if (el.registerForm) el.registerForm.addEventListener('submit', handleRegistration);
+        if (el.waterBtn) el.waterBtn.addEventListener('click', handleWaterTree);
+        if (el.photoBtn) el.photoBtn.addEventListener('click', handlePhotoTree);
+
+        if (el.refreshRankingBtn) {
+          el.refreshRankingBtn.addEventListener('click', () => {
+            el.refreshRankingBtn.querySelector('i')?.classList.add('fa-spin');
+            fetchLeaderboard(false).finally(() => {
+              setTimeout(() => el.refreshRankingBtn.querySelector('i')?.classList.remove('fa-spin'), 600);
+            });
+          });
+        }
+
+        document.querySelectorAll('[data-action="go-sponsor"]').forEach((btn) => {
+          btn.addEventListener('click', () => switchTab('sponsor'));
+        });
+
+        document.querySelectorAll('.btn-redeem').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const title = btn.getAttribute('data-title') || 'Recompensa';
+            const cost = parseInt(btn.getAttribute('data-cost') || '100', 10);
+            handleRecycleRedeem(title, cost);
+          });
+        });
+
+        const dlBtn = document.getElementById('btn-download-file');
+        if (dlBtn) {
+          dlBtn.addEventListener('click', () => {
+            const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+            const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'index.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('¡Descargando archivo index.html para GitHub!');
+            if (el.moreSubmenuModal) el.moreSubmenuModal.classList.remove('open');
+          });
+        }
+
+        const resetBtn = document.getElementById('btn-reset-room');
+        if (resetBtn) {
+          resetBtn.addEventListener('click', async () => {
+            if (confirm('¿Deseas reiniciar la sala? Se vaciará la lista de participantes para comenzar un nuevo grupo desde cero.')) {
+              STATE.participants = [];
+              localStorage.removeItem('rv_cached_participants');
+              if (hasServerBackend) {
+                try { await fetch('/api/leaderboard/reset', { method: 'POST' }); } catch (e) {}
+              }
+              try {
+                await fetch(CLOUD_NTFY_URL, {
+                  method: 'POST',
+                  body: JSON.stringify({ type: 'RESET_LEADERBOARD', timestamp: Date.now() }),
+                });
+              } catch (e) {}
+              renderRanking();
+              showToast('Sala reiniciada con éxito');
+              if (el.moreSubmenuModal) el.moreSubmenuModal.classList.remove('open');
+            }
+          });
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>

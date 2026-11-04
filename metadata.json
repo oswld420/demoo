@@ -1,0 +1,6 @@
+{
+  "name": "Raíz Viva - Demo PWA",
+  "description": "Plataforma interactiva para la supervivencia de árboles con sensores IoT, clasificación en vivo y gamificación para presentaciones.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

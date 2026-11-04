@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+@keyframes treeSway {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(1.2deg);
+  }
+}
+
+@keyframes leafFlutter {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.05) rotate(2deg);
+  }
+}
+
+@keyframes rainDrop {
+  0% {
+    transform: translateY(-20px) scale(0.6);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.9;
+  }
+  90% {
+    transform: translateY(85px) scale(1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(95px) scale(1.4);
+    opacity: 0;
+  }
+}
+
+@keyframes scanLine {
+  0% {
+    top: 5%;
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.85;
+  }
+  80% {
+    opacity: 0.85;
+  }
+  100% {
+    top: 92%;
+    opacity: 0;
+  }
+}
+
+@keyframes floatReward {
+  0% {
+    transform: translateY(0) scale(0.8);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1.1);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(-40px) scale(1);
+  }
+  100% {
+    transform: translateY(-60px) scale(0.9);
+    opacity: 0;
+  }
+}
+
+@keyframes pulseBloom {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.6));
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-tree-sway {
+  animation: treeSway 4s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+.animate-bloom {
+  animation: pulseBloom 1.2s ease-out;
+}
+
+.animate-raindrop-1 {
+  animation: rainDrop 0.85s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.animate-raindrop-2 {
+  animation: rainDrop 0.9s cubic-bezier(0.4, 0, 0.6, 1) infinite 0.25s;
+}
+.animate-raindrop-3 {
+  animation: rainDrop 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite 0.45s;
+}
+.animate-raindrop-4 {
+  animation: rainDrop 0.95s cubic-bezier(0.4, 0, 0.6, 1) infinite 0.15s;
+}
+
+.animate-scanner {
+  animation: scanLine 1.6s ease-in-out infinite;
+}
+
+.animate-float-reward {
+  animation: floatReward 1.8s ease-out forwards;
+}

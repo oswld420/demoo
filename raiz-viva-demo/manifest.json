@@ -1,0 +1,26 @@
+{
+  "id": "raiz-viva-app",
+  "name": "Raíz Viva - Supervivencia de Árboles",
+  "short_name": "Raíz Viva",
+  "description": "Para que los árboles no solo se planten, sino que sobrevivan. Demo interactiva con clasificación en vivo para presentaciones.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F5F9F5",
+  "theme_color": "#2E7D32",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%232E7D32'/%3E%3Cpath d='M96 32 C65 65 52 95 62 135 C72 138 85 140 96 140 C107 140 120 138 130 135 C140 95 127 65 96 32 Z' fill='%23ffffff'/%3E%3Cpath d='M96 60 L96 140' stroke='%232E7D32' stroke-width='6' stroke-linecap='round'/%3E%3Cpath d='M96 90 Q80 80 72 85' stroke='%232E7D32' stroke-width='5' stroke-linecap='round' fill='none'/%3E%3Cpath d='M96 105 Q112 95 120 100' stroke='%232E7D32' stroke-width='5' stroke-linecap='round' fill='none'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%232E7D32'/%3E%3Cpath d='M256 80 C173 173 138 253 165 360 C192 368 226 373 256 373 C285 373 320 368 347 360 C374 253 339 173 256 80 Z' fill='%23ffffff'/%3E%3Cpath d='M256 160 L256 373' stroke='%232E7D32' stroke-width='16' stroke-linecap='round'/%3E%3Cpath d='M256 240 Q213 213 192 226' stroke='%232E7D32' stroke-width='14' stroke-linecap='round' fill='none'/%3E%3Cpath d='M256 280 Q298 253 320 266' stroke='%232E7D32' stroke-width='14' stroke-linecap='round' fill='none'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
